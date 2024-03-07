@@ -2,6 +2,8 @@
 from tkinter import *
 import random
 import sqlite3
+from itertools import cycle
+from tkinter import simpledialog
 # ==== creating main class
 class Play_2048(Tk):
 
@@ -12,41 +14,104 @@ class Play_2048(Tk):
     high_score = 0
     game_score = 0
     highest_score = 0
-    username = "abhi"
+    username = ""
     counter=0
+
+
     # ==== creating user window
     def __init__(self, *args, **kwargs):
+
+        # Get username from user
+        self.get_username()
+
+        def pulsate_title_color_username():
+            colors = ["#ffcc00", "#e68a00","Maroon1","LightGreen", "Pink", "SlateBlue2","white","MediumPurple1","IndianRed1","Blue","Salmon","LightBlue"]
+            for color in cycle(colors):                
+                user_label.config(fg=color)
+                self.update_idletasks()
+                self.after(200)  # Adjust the delay based on your preference
+                self.update()
+
+
         Tk.__init__(self, *args, **kwargs)
-        # ==== create user interface
+        self.title("2048 Game")
+        self.geometry("490x750")
+        # Add the following lines to center the window
+        window_width = 490
+        window_height = 750
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        x_coordinate = int((screen_width - window_width) / 2)
+        y_coordinate = int((screen_height - window_height - 80) / 2)
+
+        self.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
+        self.configure(bg="#3C3C3C")  # Set background color
+
+        # Set custom fonts and colors
+        title_font = ("Quicksand", 28, "bold")
+        instruction_font = ("Helvetica", 12)
+        button_font = ("Courier", 14, "bold")
+
+        # Create user interface
         self.game_score = StringVar(self)
         self.game_score.set("0")
         self.highest_score = StringVar(self)
         self.highest_score.set("0")
 
-        # ==== adding new game , score and highest score option
-        self.button_frame = Frame(self)
-        self.button_frame.grid(row=3, column=0, columnspan=4)
-        Button(self.button_frame, text="New Game", font=("times new roman", 15), command=self.new_game).grid(row=0, column=0)
-        self.button_frame.pack(side="top")
-        Label(self.button_frame,text=f"User: {self.username}",font=("cambria 16 bold")).grid(row=1,column=1)
-        
-        Label(self.button_frame, text="Score: ", font=("times new roman", 15)).grid(row=0, column=1)
-        Label(self.button_frame, textvariable=self.game_score, font=("times new roman", 15)).grid(row=0, column=2)
-        Label(self.button_frame, text="Record:", font=("times new roman", 15)).grid(row=0, column=3)
-        Label(self.button_frame, textvariable=self.highest_score, font=("times new roman", 15)).grid(row=0, column=4)
+        # Game Title Label
+        title_label = Label(self, text="2048 Game", font=("Quicksand", 38, "bold"), bg="#3C3C3C", fg="#ffcc00", relief="ridge")
+        title_label.grid(row=0, column=0, columnspan=6, pady=20)
 
-        self.canvas = Canvas(self, width=410, height=410, borderwidth=5, highlightthickness=0)
-        self.canvas.pack(side="top", fill="both", expand="false")
+        # Instructions Label
+        instruction_label = Label(self, text="Slide tiles using arrow keys.Combine tiles to reach 2048!",font=("Helvetica", 14), bg="#3C3C3C", fg="white", relief="groove")
+        instruction_label.grid(row=1, column=0, columnspan=6, pady=15, padx=3)
 
-        # creates the databse table
+        # Adding new game, score, and highest score options
+        self.button_frame = Frame(self, bg="#3C3C3C")
+        self.button_frame.grid(row=2, column=0, columnspan=6, pady=10)
+
+        # New Game button and Username in the same row
+        new_game_button = Button(self.button_frame, text="New Game", font=button_font, command=self.new_game, bg="#6B8E23", fg="white")
+        new_game_button.grid(row=0, column=0, padx=10)
+
+        user_label = Label(self.button_frame, text=f"Welcome, {self.username}!", font=("Roboto Condensed", 16, "bold"), bg="#3C3C3C", fg="#ffcc00")
+        user_label.grid(row=0, column=1, padx=10)
+
+        # Score and Record in the row below
+        score_label = Label(self.button_frame, text="Score: ", font=("Arial", 14), bg="#3C3C3C", fg="white")
+        score_label.grid(row=1, column=0, pady=(10, 0))
+
+        score_value_label = Label(self.button_frame, textvariable=self.game_score, font=("Arial", 14, "bold"), bg="#3C3C3C", fg="#6B8E23")
+        score_value_label.grid(row=1, column=1, pady=(10, 0), padx=10)
+
+        record_label = Label(self.button_frame, text="Record:", font=("Arial", 14), bg="#3C3C3C", fg="white")
+        record_label.grid(row=2, column=0)
+
+        record_value_label = Label(self.button_frame, textvariable=self.highest_score, font=("Arial", 14, "bold"), bg="#3C3C3C", fg="#6B8E23")
+        record_value_label.grid(row=2, column=1, padx=10)
+
+        self.canvas = Canvas(self, width=410, height=410, borderwidth=5, highlightthickness=0, bg="#eeeeee")
+        self.canvas.grid(row=3, column=0, columnspan=6, pady=20)
+
+        # Creates the database table
         self.create_score_table()
 
         # Fetch and display the user's high score
         self.display_user_high_score()
 
-        # ==== create new game
+        # Create new game
         self.new_game()
 
+        # Start the pulsating effect
+        self.after(0, pulsate_title_color_username)
+
+    def get_username(self):
+        # Use tkinter simpledialog to get the username
+        self.username = simpledialog.askstring("Username", "Enter your username:")
+        if not self.username:
+            # If the user cancels or provides an empty username, set a default
+            self.username = "Guest001"
 
     def create_score_table(self):
         connection = sqlite3.connect("2048_scores.db")
@@ -259,7 +324,7 @@ class Play_2048(Tk):
         self.game_board.append([0, 0, 0, 0])
         self.game_board.append([0, 0, 0, 0])
         self.game_board.append([0, 0, 0, 0])
-        self.counter=0
+        self.counter = 0  # Reset the counter to 0 for a new game
 
         while True:
             x = random.randint(0, 3)
