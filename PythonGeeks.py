@@ -107,11 +107,12 @@ class Play_2048(Tk):
         self.after(0, pulsate_title_color_username)
 
     def get_username(self):
-        # Use tkinter simpledialog to get the username
-        self.username = simpledialog.askstring("Username", "Enter your username:")
+        # Use tkinter simpledialog to get the username with an initial value
+        self.username = simpledialog.askstring("2048", "Enter your username:")
+
         if not self.username:
             # If the user cancels or provides an empty username, set a default
-            self.username = "Guest001"
+            self.username = "GuestPlayer"
 
     def create_score_table(self):
         connection = sqlite3.connect("2048_scores.db")
